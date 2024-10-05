@@ -1,7 +1,7 @@
 import axios from 'axios';
+import {API_URL} from './config';
 import {Store} from '@reduxjs/toolkit';
 import {RootState} from './app/store';
-import {API_URL} from './config';
 
 const axiosApi = axios.create({
   baseURL: API_URL,
