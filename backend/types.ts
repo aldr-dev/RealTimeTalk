@@ -1,10 +1,16 @@
-import {Model} from 'mongoose';
+import mongoose, {Model} from 'mongoose';
 
 export interface UserFields {
   username: string;
   password: string;
   displayName: string;
   token: string;
+}
+
+export interface MessageFields {
+  user: mongoose.Types.ObjectId;
+  message: string;
+  datetime: Date;
 }
 
 export interface UserMethods {
