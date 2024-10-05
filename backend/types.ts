@@ -13,6 +13,16 @@ export interface MessageFields {
   datetime: Date;
 }
 
+export interface IncomingMessage {
+  type: string;
+  payload: string;
+}
+
+export interface OnlineUser {
+  _id: string;
+  displayName: string;
+}
+
 export interface UserMethods {
   checkPassword(password: string): Promise<boolean>;
   generateToken(): void;
