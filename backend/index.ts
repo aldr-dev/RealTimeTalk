@@ -21,6 +21,27 @@ const router = express.Router();
 const connectedClients: WebSocket[] = [];
 const onlineUsers: OnlineUser[] = [];
 
+const handleUserLogout = (user: OnlineUser | null) => {
+  if (!user) return;
+
+  const index = onlineUsers.findIndex((userOnline) => userOnline._id === user._id);
+
+  if (index !== -1) {
+    onlineUsers.splice(index, 1);
+  }
+
+  connectedClients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(
+        JSON.stringify({
+          type: 'USER_LOGOUT',
+          payload: {onlineUsers},
+        }),
+      );
+    }
+  });
+};
+
 router.ws('/chat', (ws, _) => {
   connectedClients.push(ws);
 
@@ -71,30 +92,49 @@ router.ws('/chat', (ws, _) => {
     }
 
     if (decodedMessage.type === 'LOGIN_OUT') {
-      const index = onlineUsers.findIndex((userOnline) => userOnline._id === user?._id);
-
-      if (index !== -1) {
-        onlineUsers.splice(index, 1);
-      }
-
-      connectedClients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(
-            JSON.stringify({
-              type: 'USER_LOGOUT',
-              payload: { onlineUsers },
-            }),
-          );
-        }
-      });
+      handleUserLogout(user);
     }
 
+    if (decodedMessage.type === 'SEND_MESSAGE') {
+      if (user) {
+        const newMessage = new Message({
+          user: user._id,
+          message: decodedMessage.payload,
+          datetime: new Date().toISOString(),
+        });
 
+        await newMessage.save();
 
+        connectedClients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(
+              JSON.stringify({
+                type: 'NEW_MESSAGE',
+                payload: {
+                  message: {
+                    _id: newMessage._id,
+                    user: user,
+                    message: newMessage.message,
+                    datetime: newMessage.datetime,
+                  },
+                },
+              }),
+            );
+          }
+        });
+      }
+    }
+  });
 
+  ws.on('close', () => {
+    handleUserLogout(user);
+    const index = connectedClients.indexOf(ws);
+
+    if (index !== -1) {
+      connectedClients.splice(index, 1);
+    }
   });
 });
-
 
 const run = async () => {
   await mongoose.connect(config.database);
