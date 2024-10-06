@@ -30,7 +30,7 @@ router.ws('/chat', (ws, _) => {
     const decodedMessage = JSON.parse(message.toString()) as IncomingMessage;
 
     if (decodedMessage.type === 'LOGIN') {
-      const foundUser = await User.findOne<OnlineUser>({token: decodedMessage.payload}, 'displayName');
+      const foundUser = await User.findOne<OnlineUser>({token: decodedMessage.payload}, 'displayName _id');
 
       if (!foundUser) return;
 
@@ -62,13 +62,34 @@ router.ws('/chat', (ws, _) => {
         if (client !== ws && client.readyState === WebSocket.OPEN) {
           client.send(
             JSON.stringify({
-              type: 'NEW-USER',
+              type: 'NEW_USER',
               payload: {user},
             }),
           );
         }
       });
     }
+
+    if (decodedMessage.type === 'LOGIN_OUT') {
+      const index = onlineUsers.findIndex((userOnline) => userOnline._id === user?._id);
+
+      if (index !== -1) {
+        onlineUsers.splice(index, 1);
+      }
+
+      connectedClients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(
+            JSON.stringify({
+              type: 'USER_LOGOUT',
+              payload: { onlineUsers },
+            }),
+          );
+        }
+      });
+    }
+
+
 
 
   });
