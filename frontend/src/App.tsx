@@ -6,24 +6,26 @@ import {useAppSelector} from './app/hooks';
 import {selectUser} from './features/users/usersSlice';
 import ProtectedRoute from './UI/ProtectedRoute/ProtectedRoute';
 import PageNotFound from './UI/PageNotFound/PageNotFound';
+import NavBar from './UI/NavBar/NavBar';
 
 const App = () => {
   const user = useAppSelector(selectUser);
 
   return (
     <>
-      <Container maxWidth="lg">
-        <Routes>
-          <Route path="/" element={
-            <ProtectedRoute isAllowed={Boolean(user)}>
+      <Routes>
+        <Route path="/" element={
+          <ProtectedRoute isAllowed={Boolean(user)}>
+            <NavBar/>
+            <Container maxWidth="lg">
               {/*Home*/}
-            </ProtectedRoute>
-          }/>
-          <Route path="/register" element={<Register/>}/>
-          <Route path="/login" element={<Login/>}/>
-          <Route path="*" element={<PageNotFound/>}/>
-        </Routes>
-      </Container>
+            </Container>
+          </ProtectedRoute>
+        }/>
+        <Route path="/register" element={<Register/>}/>
+        <Route path="/login" element={<Login/>}/>
+        <Route path="*" element={<PageNotFound/>}/>
+      </Routes>
     </>
   );
 };

@@ -8,7 +8,7 @@ const PageNotFound = () => {
       display="flex"
       justifyContent="center"
       alignItems="center"
-      minHeight="calc(100vh - 150px)"
+      height="100vh"
       py={{md: 5}}>
       <Container>
         <Box textAlign="center">
