@@ -3,11 +3,13 @@ import {useAppSelector} from '../../app/hooks';
 import {selectUser} from '../users/usersSlice';
 import React, {useEffect, useRef, useState} from 'react';
 import {DecodedMessage, Message, OnlineUser} from '../../types';
-import {Box, Grid, TextField} from '@mui/material';
+import {Box, Grid, TextField, Typography} from '@mui/material';
 import {LoadingButton} from '@mui/lab';
 import SendIcon from '@mui/icons-material/Send';
+import InfoIcon from '@mui/icons-material/Info';
 import UserItem from './components/UserItem';
 import MessageItem from './components/MessageItem';
+import {toast} from 'react-toastify';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -76,6 +78,7 @@ const Home = () => {
         connectWebSocket();
       }, 5000);
     } else {
+      toast.error('Соединение с сервером прервано. Пожалуйста, попробуйте снова!');
       console.log('Вы достигли максимальное количество попыток соединения!');
     }
   };
@@ -131,6 +134,12 @@ const Home = () => {
             <MessageItem key={message._id} messageData={message} />
           ))}
         </Box>
+
+        {messagesData.length === 0 ? (
+          <Typography sx={{display: 'flex', alignItems: 'center'}} variant="body1">
+            <InfoIcon />&nbsp; Здесь пусто, но ваше сообщение может изменить это :)
+          </Typography>
+        ) : null}
         <Box sx={{marginTop: 'auto'}} component="form" onSubmit={submitFormHandler}>
           <Grid container spacing={3} alignItems="center">
             <Grid item xs={12} md={9}>
