@@ -66,6 +66,21 @@ router.ws('/chat', (ws, _) => {
         return;
       }
 
+      const existingUserIndex = onlineUsers.findIndex((userOnline) => userOnline._id.toString() === user?._id.toString());
+
+      if (existingUserIndex === -1) {
+        onlineUsers.push(user);
+      }
+
+      connectedClients.forEach((client) => {
+        client.send(
+          JSON.stringify({
+            type: 'NEW_USER',
+            payload: {user},
+          }),
+        );
+      });
+
       const messages = await Message.find({})
         .sort({datetime: -1})
         .limit(30)
@@ -80,17 +95,6 @@ router.ws('/chat', (ws, _) => {
           },
         }),
       );
-
-      connectedClients.forEach((client) => {
-        if (client !== ws && client.readyState === WebSocket.OPEN) {
-          client.send(
-            JSON.stringify({
-              type: 'NEW_USER',
-              payload: {user},
-            }),
-          );
-        }
-      });
     }
 
     if (decodedMessage.type === 'LOGIN_OUT') {

@@ -2,11 +2,12 @@ import {useNavigate} from 'react-router-dom';
 import {useAppSelector} from '../../app/hooks';
 import {selectUser} from '../users/usersSlice';
 import React, {useEffect, useRef, useState} from 'react';
-import {DecodedMessage, Message, OnlineUser, User} from '../../types';
+import {DecodedMessage, Message, OnlineUser} from '../../types';
 import {Box, Grid, TextField} from '@mui/material';
 import {LoadingButton} from '@mui/lab';
 import SendIcon from '@mui/icons-material/Send';
 import UserItem from './components/UserItem';
+import MessageItem from './components/MessageItem';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -92,7 +93,7 @@ const Home = () => {
     connectWebSocket();
 
     return () => ws.current?.close();
-  }, [user]);
+  }, [user, navigate]);
 
   const handleInputField = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputField(event.target.value);
@@ -123,9 +124,14 @@ const Home = () => {
         ))}
       </fieldset>
 
-      <fieldset style={{width: '100%', borderRadius: '5px', borderColor: '#eee'}}>
+      <fieldset style={{width: '100%', borderRadius: '5px', borderColor: '#eee', display: 'flex', flexDirection: 'column'}}>
         <legend style={{fontWeight: 'bold'}}>Онлайн Чат</legend>
-        <Box component="form" onSubmit={submitFormHandler}>
+        <Box sx={{height: '85%', overflow: 'auto', pb: 1, pt: 1, display: 'flex', flexDirection: 'column', gap: 1.5}}>
+          {messagesData && messagesData.map((message) => (
+            <MessageItem key={message._id} messageData={message} />
+          ))}
+        </Box>
+        <Box sx={{marginTop: 'auto'}} component="form" onSubmit={submitFormHandler}>
           <Grid container spacing={3} alignItems="center">
             <Grid item xs={12} md={9}>
               <TextField
