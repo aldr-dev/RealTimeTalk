@@ -13,15 +13,17 @@ const app = express();
 expressWs(app);
 const port = 8000;
 
+const router = express.Router();
+
 app.use(cors(config.corsOptions));
 app.use(express.json());
 app.use('/users', usersRouter);
+app.use(router);
 
-const router = express.Router();
 const connectedClients: WebSocket[] = [];
 const onlineUsers: OnlineUser[] = [];
 
-const handleUserLogout = (user: OnlineUser | null) => {
+const handleUserLogout = (ws: WebSocket, user: OnlineUser | null) => {
   if (!user) return;
 
   const index = onlineUsers.findIndex((userOnline) => userOnline._id === user._id);
@@ -31,15 +33,15 @@ const handleUserLogout = (user: OnlineUser | null) => {
   }
 
   connectedClients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(
-        JSON.stringify({
-          type: 'USER_LOGOUT',
-          payload: {onlineUsers},
-        }),
-      );
-    }
+    client.send(
+      JSON.stringify({
+        type: 'USER_LOGOUT',
+        payload: {onlineUsers},
+      }),
+    );
   });
+
+  ws.close(1000, 'Пользователь вышел из системы');
 };
 
 router.ws('/chat', (ws, _) => {
@@ -55,7 +57,7 @@ router.ws('/chat', (ws, _) => {
 
       if (!foundUser) return;
 
-      const existingUser = onlineUsers.find((user) => user._id === foundUser._id.toString());
+      const existingUser = onlineUsers.find((user) => user._id.toString() === foundUser._id.toString());
       user = foundUser;
 
       if (!existingUser) {
@@ -92,7 +94,7 @@ router.ws('/chat', (ws, _) => {
     }
 
     if (decodedMessage.type === 'LOGIN_OUT') {
-      handleUserLogout(user);
+      handleUserLogout(ws, user);
     }
 
     if (decodedMessage.type === 'SEND_MESSAGE') {
@@ -106,28 +108,26 @@ router.ws('/chat', (ws, _) => {
         await newMessage.save();
 
         connectedClients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(
-              JSON.stringify({
-                type: 'NEW_MESSAGE',
-                payload: {
-                  message: {
-                    _id: newMessage._id,
-                    user: user,
-                    message: newMessage.message,
-                    datetime: newMessage.datetime,
-                  },
+          client.send(
+            JSON.stringify({
+              type: 'NEW_MESSAGE',
+              payload: {
+                message: {
+                  _id: newMessage._id,
+                  user: user,
+                  message: newMessage.message,
+                  datetime: newMessage.datetime,
                 },
-              }),
-            );
-          }
+              },
+            }),
+          );
         });
       }
     }
   });
 
   ws.on('close', () => {
-    handleUserLogout(user);
+    handleUserLogout(ws, user);
     const index = connectedClients.indexOf(ws);
 
     if (index !== -1) {

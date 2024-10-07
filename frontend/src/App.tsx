@@ -7,6 +7,7 @@ import {selectUser} from './features/users/usersSlice';
 import ProtectedRoute from './UI/ProtectedRoute/ProtectedRoute';
 import PageNotFound from './UI/PageNotFound/PageNotFound';
 import NavBar from './UI/NavBar/NavBar';
+import Home from './features/chat/Home';
 
 const App = () => {
   const user = useAppSelector(selectUser);
@@ -18,7 +19,7 @@ const App = () => {
           <ProtectedRoute isAllowed={Boolean(user)}>
             <NavBar/>
             <Container maxWidth="lg">
-              {/*Home*/}
+              <Home/>
             </Container>
           </ProtectedRoute>
         }/>
